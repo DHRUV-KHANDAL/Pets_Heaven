@@ -88,8 +88,8 @@ Write-Host "Starting Backend (Spring Boot)..." -ForegroundColor Yellow
 $backendCmd = "cd /d `"$backendDir`" && mvnw.cmd -Djava.version=17 -DskipTests package && java -jar target\AniHome-api-0.0.1-SNAPSHOT.jar"
 Start-Process cmd -ArgumentList "/k", $backendCmd -WindowStyle Normal
 
-Write-Host "Waiting for backend on port 8080 (up to 150s)..." -ForegroundColor Yellow
-$backendReady = Wait-Port -Port 8080 -TimeoutSeconds 150
+Write-Host "Waiting for backend on port 8080 (up to 300s)..." -ForegroundColor Yellow
+$backendReady = Wait-Port -Port 8080 -TimeoutSeconds 300
 if (-not $backendReady) {
     Write-Host "Backend did not become reachable on http://localhost:8080." -ForegroundColor Red
     Write-Host "Check the Backend terminal window for errors." -ForegroundColor Red
@@ -99,8 +99,8 @@ Write-Host "Starting Frontend (React)..." -ForegroundColor Yellow
 $frontendCmd = "cd /d `"$frontendDir`" && (if not exist node_modules (npm install)) && npm start"
 Start-Process cmd -ArgumentList "/k", $frontendCmd -WindowStyle Normal
 
-Write-Host "Waiting for frontend on port 3000 (up to 120s)..." -ForegroundColor Yellow
-$frontendReady = Wait-Port -Port 3000 -TimeoutSeconds 120
+Write-Host "Waiting for frontend on port 3000 (up to 240s)..." -ForegroundColor Yellow
+$frontendReady = Wait-Port -Port 3000 -TimeoutSeconds 240
 if (-not $frontendReady) {
     Write-Host "Frontend did not become reachable on http://localhost:3000." -ForegroundColor Red
     Write-Host "Check the Frontend terminal window for errors." -ForegroundColor Red

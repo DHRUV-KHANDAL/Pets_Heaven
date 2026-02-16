@@ -12,7 +12,6 @@ import com.AniHome.AniHome.api.entity.JwtResponse;
 import com.AniHome.AniHome.api.entity.User;
 import com.AniHome.AniHome.api.service.UserService;
 
-import javax.annotation.PostConstruct;
 import javax.validation.Valid;
 
 @RestController
@@ -21,10 +20,6 @@ public class AuthController {
 	@Autowired
     private UserService userService;
 
-    @PostConstruct
-    public void initRoleAndUser() {
-        userService.initRoleAndUser();
-    }
     
     @GetMapping("/forAdmin")
     @PreAuthorize("hasRole('Admin')")

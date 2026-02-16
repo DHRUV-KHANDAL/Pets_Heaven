@@ -1,5 +1,7 @@
 package com.AniHome.AniHome.api.service;
 
+import java.util.Objects;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +14,7 @@ public class RoleService {
     private RoleDao roleDao;
 
     public Role createNewRole(Role role) {
-        return roleDao.save(role);
+        Role nonNullRole = Objects.requireNonNull(role, "Role must not be null");
+        return roleDao.save(nonNullRole);
     }
 }

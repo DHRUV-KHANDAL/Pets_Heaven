@@ -21,60 +21,53 @@ import com.AniHome.AniHome.api.service.UserService;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Objects;
 
-import javax.annotation.PostConstruct;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
-	
+
 	@Value("${disk.upload.basepath}")
 	private String Bsp;
-	
+
 	@Autowired
     private UserService userService;
-	
+
 	@Autowired
 	private FileUpService fileUpService;
-
-    @PostConstruct
-    public void initRoleAndUser() {
-        userService.initRoleAndUser();
-    }
 
     @PostMapping("/register")
     public User registerNewUser(@RequestBody @Valid User user) {
         return userService.registerNewUser(user);
     }
-    
+
     @PostMapping("/userPic")
-    public void fileUpload(@RequestParam("image") MultipartFile image , @RequestParam("fileName") String fileName)
+    public void fileUpload(@RequestParam("image") MultipartFile image, @RequestParam("fileName") String fileName)
     {
     	this.fileUpService.uploadImg("images", image, fileName);
     }
-    
-    @GetMapping(value="{productImageName}",produces = "image/jpeg")
-   	public void fetchPrductImage(@PathVariable("productImageName") String productImageName,HttpServletResponse res) throws IOException
+
+    @GetMapping(value = "{productImageName}", produces = "image/jpeg")
+   	public void fetchPrductImage(@PathVariable("productImageName") String productImageName, HttpServletResponse res) throws IOException
    	{
    		System.out.println(productImageName);
-   		File filepath=new File(Bsp,productImageName);
-   		
-   		Resource resource=new FileSystemResource(filepath);
-   		if(resource!=null)
+   		File filepath = new File(Bsp, productImageName);
+
+   		Resource resource = new FileSystemResource(filepath);
+   		if (resource != null)
    		{
-   			try(InputStream in=resource.getInputStream())
+   			try (InputStream in = resource.getInputStream())
    			{
-   				ServletOutputStream out=res.getOutputStream();
+                OutputStream out = Objects.requireNonNull(res.getOutputStream(), "Response output stream must not be null");
    				FileCopyUtils.copy(in, out);
    			}
    		}
    		System.out.println("Responce sent");
-   		
+
    	}
-    
-    
-    
+
 }
