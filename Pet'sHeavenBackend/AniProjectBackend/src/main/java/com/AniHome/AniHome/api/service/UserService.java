@@ -1,6 +1,7 @@
 package com.AniHome.AniHome.api.service;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,8 +14,6 @@ import com.AniHome.AniHome.api.dao.UserDao;
 import com.AniHome.AniHome.api.entity.Role;
 import com.AniHome.AniHome.api.entity.User;
 
-
-
 @Service
 public class UserService {
 	@Autowired
@@ -25,8 +24,7 @@ public class UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-    
-    
+
     public void initRoleAndUser() {
 
 		Role userRole = new Role();
@@ -47,6 +45,7 @@ public class UserService {
     }
 
     public User registerNewUser(User user) {
+        User nonNullUser = Objects.requireNonNull(user, "User must not be null");
     	// Ensure roles exist
     	try {
     		if (!roleDao.existsById("User")) {
@@ -55,14 +54,14 @@ public class UserService {
     			userRole.setRoleDescription("Default user role");
     			roleDao.save(userRole);
     		}
-    		
+
     		if (!roleDao.existsById("Rescuer")) {
     			Role rescuerRole = new Role();
     			rescuerRole.setRoleName("Rescuer");
     			rescuerRole.setRoleDescription("Rescuer role who will rescue the animal");
     			roleDao.save(rescuerRole);
     		}
-    		
+
     		if (!roleDao.existsById("Admin")) {
     			Role adminRole = new Role();
     			adminRole.setRoleName("Admin");
@@ -72,45 +71,49 @@ public class UserService {
     	} catch (Exception e) {
     		// Roles might already exist
     	}
-    	
+
     	// Check if user already exists
-    	if (userDao.existsById(user.getUserName())) {
+        String userName = Objects.requireNonNull(nonNullUser.getUserName(), "Username must not be null");
+    	if (userDao.existsById(userName)) {
     		throw new DataIntegrityViolationException("Username Already Exist!");
     	}
-    	
+
     	// Set role based on userRole field
     	Set<Role> userRoles = new HashSet<>();
     	Role role;
-    	
-    	if ("rescuer".equalsIgnoreCase(user.getUserRole())) {
+
+    	if ("rescuer".equalsIgnoreCase(nonNullUser.getUserRole())) {
     		role = roleDao.findById("Rescuer").orElse(null);
-    	} else if ("admin".equalsIgnoreCase(user.getUserRole())) {
+    	} else if ("admin".equalsIgnoreCase(nonNullUser.getUserRole())) {
     		role = roleDao.findById("Admin").orElse(null);
     	} else {
     		role = roleDao.findById("User").orElse(null);
     	}
-    	
+
     	if (role != null) {
     		userRoles.add(role);
     	}
-    	
-    	user.setRole(userRoles);
-    	user.setUserPassword(getEncodedPassword(user.getUserPassword()));
 
-        return userDao.save(user);
+        nonNullUser.setRole(userRoles);
+        nonNullUser.setUserPassword(getEncodedPassword(nonNullUser.getUserPassword()));
+
+        return userDao.save(nonNullUser);
     }
-    
+
     public User updateUser(User user) {
-     
-    	User u = userDao.findById(user.getUserName()).get();
-    	u.setUserName(user.getUserName());
-    	u.setUserFirstName(user.getUserFirstName());
-    	u.setUserLastName(user.getUserLastName());
-    	u.setUserEmail(user.getUserEmail());
-    	u.setUserPhone(user.getUserPhone());
-    	u.setCity(user.getCity());
+        User nonNullUser = Objects.requireNonNull(user, "User must not be null");
+        String userName = Objects.requireNonNull(nonNullUser.getUserName(), "Username must not be null");
+
+    	User u = userDao.findById(userName)
+                .orElseThrow(() -> new DataIntegrityViolationException("User does not exist"));
+    	u.setUserName(userName);
+        u.setUserFirstName(nonNullUser.getUserFirstName());
+        u.setUserLastName(nonNullUser.getUserLastName());
+        u.setUserEmail(nonNullUser.getUserEmail());
+        u.setUserPhone(nonNullUser.getUserPhone());
+        u.setCity(nonNullUser.getCity());
     	u.setRole(u.getRole());
-    	
+
         return userDao.save(u);
     }
 

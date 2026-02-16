@@ -44,9 +44,17 @@ timeout /t 2 /nobreak >nul
 echo Starting Backend (Spring Boot)...
 start "Backend" cmd /k "cd /d \"%BACKEND_DIR%\" && mvnw.cmd -Djava.version=17 -DskipTests package && java -jar target\AniHome-api-0.0.1-SNAPSHOT.jar"
 
-echo Waiting for backend on port 8080 (up to 150s)...
+echo Waiting for backend on port 8080 (up to 300s)...
 set "BACKEND_READY="
-call :wait_for_port 8080 150 BACKEND_READY
+for /L %%i in (1,1,300) do (
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $client = New-Object System.Net.Sockets.TcpClient; $result = $client.BeginConnect('127.0.0.1', 8080, $null, $null); $connected = $result.AsyncWaitHandle.WaitOne(500); if ($connected -and $client.Connected) { $client.EndConnect($result) | Out-Null; $client.Close(); exit 0 } else { $client.Close(); exit 1 } } catch { exit 1 }"
+  if not errorlevel 1 (
+    set "BACKEND_READY=1"
+    goto :backend_ready
+  )
+  timeout /t 1 /nobreak >nul
+)
+:backend_ready
 if not defined BACKEND_READY (
   echo Backend did not become reachable on port 8080.
   echo Check the Backend terminal window for errors.
@@ -55,9 +63,17 @@ if not defined BACKEND_READY (
 echo Starting Frontend (React)...
 start "Frontend" cmd /k "cd /d \"%FRONTEND_DIR%\" && (if not exist node_modules (npm install)) && npm start"
 
-echo Waiting for frontend on port 3000 (up to 120s)...
+echo Waiting for frontend on port 3000 (up to 240s)...
 set "FRONTEND_READY="
-call :wait_for_port 3000 120 FRONTEND_READY
+for /L %%i in (1,1,240) do (
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "try { $client = New-Object System.Net.Sockets.TcpClient; $result = $client.BeginConnect('127.0.0.1', 3000, $null, $null); $connected = $result.AsyncWaitHandle.WaitOne(500); if ($connected -and $client.Connected) { $client.EndConnect($result) | Out-Null; $client.Close(); exit 0 } else { $client.Close(); exit 1 } } catch { exit 1 }"
+  if not errorlevel 1 (
+    set "FRONTEND_READY=1"
+    goto :frontend_ready
+  )
+  timeout /t 1 /nobreak >nul
+)
+:frontend_ready
 if not defined FRONTEND_READY (
   echo Frontend did not become reachable on port 3000.
   echo Check the Frontend terminal window for errors.

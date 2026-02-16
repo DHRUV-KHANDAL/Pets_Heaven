@@ -1,6 +1,7 @@
 package com.AniHome.AniHome.api.service;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,29 +32,30 @@ public class JwtService implements UserDetailsService {
     @Autowired
     private AuthenticationManager authenticationManager;
 
-    public JwtResponse createJwtToken(JwtRequest jwtRequest) throws Exception   {
-        String userName = jwtRequest.getUserName();
-        String userPassword = jwtRequest.getUserPassword();
-        
+    public JwtResponse createJwtToken(JwtRequest jwtRequest) throws Exception {
+        JwtRequest nonNullRequest = Objects.requireNonNull(jwtRequest, "JWT request must not be null");
+        String userName = Objects.requireNonNull(nonNullRequest.getUserName(), "Username must not be null");
+        String userPassword = Objects.requireNonNull(nonNullRequest.getUserPassword(), "Password must not be null");
+
 		authenticate(userName, userPassword);
-		
+
 		UserDetails userDetails = loadUserByUsername(userName);
         String newGeneratedToken = jwtUtil.generateToken(userDetails);
-        System.out.println("Yogesh TEST ="+newGeneratedToken);
+        System.out.println("Yogesh TEST =" + newGeneratedToken);
 
         User user = userDao.findById(userName)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found!"));
 
         return new JwtResponse(user, newGeneratedToken);
     }
-    
 
     @SuppressWarnings("unchecked")
 	@Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-    	User user = userDao.findById(username)
+        String nonNullUsername = Objects.requireNonNull(username, "Username must not be null");
+    	User user = userDao.findById(nonNullUsername)
     			.orElseThrow(() -> new UsernameNotFoundException("User not found!"));
-    
+
         return new org.springframework.security.core.userdetails.User(
                 user.getUserName(),
                 user.getUserPassword(),
@@ -81,5 +83,5 @@ public class JwtService implements UserDetailsService {
             throw new BadCredentialsException("INVALID_CREDENTIALS", e);
         }
     }
-	
+
 }
