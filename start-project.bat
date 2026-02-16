@@ -46,20 +46,9 @@ start "Backend" cmd /k "cd /d \"%BACKEND_DIR%\" && mvnw.cmd -Djava.version=17 -D
 
 echo Waiting for backend on port 8080 (up to 150s)...
 set "BACKEND_READY="
-for /L %%i in (1,1,150) do (
-  set "PORT_LINE="
-  for /f "delims=" %%A in ('netstat -ano ^| findstr /R /C:":8080 .*LISTENING"') do (
-    set "PORT_LINE=%%A"
-  )
-  if defined PORT_LINE (
-    set "BACKEND_READY=1"
-    goto :backend_ready
-  )
-  timeout /t 1 /nobreak >nul
-)
-:backend_ready
+call :wait_for_port 8080 150 BACKEND_READY
 if not defined BACKEND_READY (
-  echo Backend did not become reachable on http://localhost:8080.
+  echo Backend did not become reachable on port 8080.
   echo Check the Backend terminal window for errors.
 )
 
@@ -68,20 +57,9 @@ start "Frontend" cmd /k "cd /d \"%FRONTEND_DIR%\" && (if not exist node_modules 
 
 echo Waiting for frontend on port 3000 (up to 120s)...
 set "FRONTEND_READY="
-for /L %%i in (1,1,120) do (
-  set "PORT_LINE="
-  for /f "delims=" %%A in ('netstat -ano ^| findstr /R /C:":3000 .*LISTENING"') do (
-    set "PORT_LINE=%%A"
-  )
-  if defined PORT_LINE (
-    set "FRONTEND_READY=1"
-    goto :frontend_ready
-  )
-  timeout /t 1 /nobreak >nul
-)
-:frontend_ready
+call :wait_for_port 3000 120 FRONTEND_READY
 if not defined FRONTEND_READY (
-  echo Frontend did not become reachable on http://localhost:3000.
+  echo Frontend did not become reachable on port 3000.
   echo Check the Frontend terminal window for errors.
 )
 
@@ -93,3 +71,24 @@ if defined BACKEND_READY if defined FRONTEND_READY (
 )
 echo Backend: http://localhost:8080
 echo Frontend: http://localhost:3000
+
+exit /b 0
+
+:wait_for_port
+set "WAIT_PORT=%~1"
+set "WAIT_TIMEOUT=%~2"
+set "WAIT_RESULT_VAR=%~3"
+set "WAIT_FOUND="
+
+for /L %%i in (1,1,%WAIT_TIMEOUT%) do (
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "$client = New-Object Net.Sockets.TcpClient; try { $iar = $client.BeginConnect('127.0.0.1', %WAIT_PORT%, $null, $null); if($iar.AsyncWaitHandle.WaitOne(500) -and $client.Connected){ exit 0 } else { exit 1 } } catch { exit 1 } finally { if($client){ $client.Close() } }" >nul 2>&1
+  if not errorlevel 1 (
+    set "WAIT_FOUND=1"
+    goto :wait_done
+  )
+  timeout /t 1 /nobreak >nul
+)
+
+:wait_done
+if defined WAIT_FOUND set "%WAIT_RESULT_VAR%=1"
+exit /b 0
