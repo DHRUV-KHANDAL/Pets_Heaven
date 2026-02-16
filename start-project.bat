@@ -56,7 +56,7 @@ for /L %%i in (1,1,300) do (
 )
 :backend_ready
 if not defined BACKEND_READY (
-  echo Backend did not become reachable on http://localhost:8080.
+  echo Backend did not become reachable on port 8080.
   echo Check the Backend terminal window for errors.
 )
 
@@ -75,7 +75,7 @@ for /L %%i in (1,1,240) do (
 )
 :frontend_ready
 if not defined FRONTEND_READY (
-  echo Frontend did not become reachable on http://localhost:3000.
+  echo Frontend did not become reachable on port 3000.
   echo Check the Frontend terminal window for errors.
 )
 
@@ -87,3 +87,24 @@ if defined BACKEND_READY if defined FRONTEND_READY (
 )
 echo Backend: http://localhost:8080
 echo Frontend: http://localhost:3000
+
+exit /b 0
+
+:wait_for_port
+set "WAIT_PORT=%~1"
+set "WAIT_TIMEOUT=%~2"
+set "WAIT_RESULT_VAR=%~3"
+set "WAIT_FOUND="
+
+for /L %%i in (1,1,%WAIT_TIMEOUT%) do (
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "$client = New-Object Net.Sockets.TcpClient; try { $iar = $client.BeginConnect('127.0.0.1', %WAIT_PORT%, $null, $null); if($iar.AsyncWaitHandle.WaitOne(500) -and $client.Connected){ exit 0 } else { exit 1 } } catch { exit 1 } finally { if($client){ $client.Close() } }" >nul 2>&1
+  if not errorlevel 1 (
+    set "WAIT_FOUND=1"
+    goto :wait_done
+  )
+  timeout /t 1 /nobreak >nul
+)
+
+:wait_done
+if defined WAIT_FOUND set "%WAIT_RESULT_VAR%=1"
+exit /b 0
