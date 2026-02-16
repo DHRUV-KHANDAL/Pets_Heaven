@@ -24,7 +24,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Objects;
 
-import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
@@ -40,11 +39,6 @@ public class UserController {
 
 	@Autowired
 	private FileUpService fileUpService;
-
-    @PostConstruct
-    public void initRoleAndUser() {
-        userService.initRoleAndUser();
-    }
 
     @PostMapping("/register")
     public User registerNewUser(@RequestBody @Valid User user) {

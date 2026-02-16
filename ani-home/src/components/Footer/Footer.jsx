@@ -31,7 +31,6 @@ function Footer() {
   const id = canBeOpen ? "transition-popper" : undefined;
   return (
     <BottomNavigation
-      showLabels
       style={{ background: "#2E3B55", minHeight: "180px", position: "relative",
       left:"0",
       bottom:"0",
