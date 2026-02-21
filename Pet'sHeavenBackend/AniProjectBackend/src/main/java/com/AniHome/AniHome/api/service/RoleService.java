@@ -10,11 +10,13 @@ import com.AniHome.AniHome.api.entity.Role;
 
 @Service
 public class RoleService {
-	@Autowired
+    @Autowired
     private RoleDao roleDao;
 
     public Role createNewRole(Role role) {
-        Role nonNullRole = Objects.requireNonNull(role, "Role must not be null");
-        return roleDao.save(nonNullRole);
+        if (role == null) {
+            throw new IllegalArgumentException("Role must not be null");
+        }
+        return roleDao.save(role);
     }
 }
