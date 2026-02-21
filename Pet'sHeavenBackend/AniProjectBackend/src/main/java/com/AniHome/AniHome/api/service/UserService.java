@@ -1,6 +1,7 @@
 package com.AniHome.AniHome.api.service;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,7 +103,10 @@ public class UserService {
         user.setRole(userRoles);
         user.setUserPassword(getEncodedPassword(user.getUserPassword()));
 
-        return userDao.save(user);
+        nonNullUser.setRole(userRoles);
+        nonNullUser.setUserPassword(getEncodedPassword(nonNullUser.getUserPassword()));
+
+        return userDao.save(nonNullUser);
     }
 
     public User updateUser(User user) {
