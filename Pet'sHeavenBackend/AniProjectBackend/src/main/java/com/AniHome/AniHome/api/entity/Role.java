@@ -7,7 +7,6 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Document(collection = "roles")
 public class Role {
 	@Id
-    @Field("roleName")
 	private String roleName="User";
     
     @Field("roleDescription")
