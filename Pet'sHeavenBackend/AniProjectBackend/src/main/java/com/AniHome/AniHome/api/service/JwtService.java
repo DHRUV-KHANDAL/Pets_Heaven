@@ -23,7 +23,7 @@ import com.AniHome.AniHome.api.util.JwtUtil;
 
 @Service
 public class JwtService implements UserDetailsService {
-    @Autowired
+	@Autowired
     private JwtUtil jwtUtil;
 
     @Autowired
@@ -33,46 +33,39 @@ public class JwtService implements UserDetailsService {
     private AuthenticationManager authenticationManager;
 
     public JwtResponse createJwtToken(JwtRequest jwtRequest) throws Exception {
-        if (jwtRequest == null) {
-            throw new IllegalArgumentException("JWT request must not be null");
-        }
+        JwtRequest nonNullRequest = Objects.requireNonNull(jwtRequest, "JWT request must not be null");
+        String userName = Objects.requireNonNull(nonNullRequest.getUserName(), "Username must not be null");
+        String userPassword = Objects.requireNonNull(nonNullRequest.getUserPassword(), "Password must not be null");
 
-        String userName = jwtRequest.getUserName();
-        if (userName == null) {
-            throw new IllegalArgumentException("Username must not be null");
-        }
+		authenticate(userName, userPassword);
 
-        String userPassword = jwtRequest.getUserPassword();
-        if (userPassword == null) {
-            throw new IllegalArgumentException("Password must not be null");
-        }
-
-        authenticate(userName, userPassword);
-
-        UserDetails userDetails = loadUserByUsername(userName);
+		UserDetails userDetails = loadUserByUsername(userName);
         String newGeneratedToken = jwtUtil.generateToken(userDetails);
         System.out.println("Yogesh TEST =" + newGeneratedToken);
 
-        User user = userDao.findById(userName).orElseThrow(() -> new UsernameNotFoundException("User not found!"));
+        User user = userDao.findById(userName)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found!"));
 
         return new JwtResponse(user, newGeneratedToken);
     }
 
     @SuppressWarnings("unchecked")
-    @Override
+	@Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        if (username == null) {
-            throw new UsernameNotFoundException("User not found!");
-        }
-        User user = userDao.findById(username).orElseThrow(() -> new UsernameNotFoundException("User not found!"));
+        String nonNullUsername = Objects.requireNonNull(username, "Username must not be null");
+    	User user = userDao.findById(nonNullUsername)
+    			.orElseThrow(() -> new UsernameNotFoundException("User not found!"));
 
-        return new org.springframework.security.core.userdetails.User(user.getUserName(), user.getUserPassword(),
-                getAuthority(user));
+        return new org.springframework.security.core.userdetails.User(
+                user.getUserName(),
+                user.getUserPassword(),
+                getAuthority(user)
+        );
 
     }
 
     @SuppressWarnings("rawtypes")
-    private Set getAuthority(User user) {
+	private Set getAuthority(User user) {
         Set<SimpleGrantedAuthority> authorities = new HashSet<>();
         user.getRole().forEach(role -> {
             authorities.add(new SimpleGrantedAuthority("ROLE_" + role.getRoleName()));
@@ -86,7 +79,7 @@ public class JwtService implements UserDetailsService {
         } catch (DisabledException e) {
             throw new Exception("USER_DISABLED", e);
         } catch (BadCredentialsException e) {
-            System.out.println("Invalid Credentials");
+        	System.out.println("Invalid Credentials");
             throw new BadCredentialsException("INVALID_CREDENTIALS", e);
         }
     }
